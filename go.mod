@@ -1,4 +1,4 @@
-module db-append-only-sdk
+module github.com/r-coffee/db-append-only-sdk
 
 go 1.16
 
