@@ -47,10 +47,11 @@ func (s *AppendDbSDKClient) Append(table string, ts time.Time, dat []byte) error
 }
 
 // Query will return all the rows for a table that are between start and stop inclusive
-func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) error {
+func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*DBTuple, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := s.stub.Query(ctx, &QueryRequest{Table: table, Start: start.UnixNano(), Stop: stop.UnixNano()})
-	return err
+	resp, err := s.stub.Query(ctx, &QueryRequest{Table: table, Start: start.UnixNano(), Stop: stop.UnixNano()})
+
+	return resp.Data, err
 }
