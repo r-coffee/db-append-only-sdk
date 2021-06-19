@@ -14,11 +14,11 @@ type AppendDbSDKClient struct {
 	stub DBServiceClient
 }
 
-// CreateLogger2Client creates a new sdk client
+// CreateAppendDBClient creates a new sdk client
 // host is the hostname of the server
 // pathToCert is the path to the server's public certificate
 // port is the port number the server service is running on
-func CreateLogger2Client(host, pathToCert string, port int) *AppendDbSDKClient {
+func CreateAppendDBClient(host, pathToCert string, port int) *AppendDbSDKClient {
 	var sdk AppendDbSDKClient
 	creds, err := credentials.NewClientTLSFromFile(pathToCert, host)
 	if err != nil {
