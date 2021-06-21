@@ -25,7 +25,11 @@ func CreateAppendDBClient(host, pathToCert string, port int) *AppendDbSDKClient 
 		log.Fatal(err)
 	}
 
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", host, port), grpc.WithTransportCredentials(creds), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	// connection timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conn, err := grpc.DialContext(ctx, fmt.Sprintf("%s:%d", host, port), grpc.WithTransportCredentials(creds), grpc.WithBlock())
 	if err != nil {
 		log.Fatal(err)
 	}
