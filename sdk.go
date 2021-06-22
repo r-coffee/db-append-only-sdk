@@ -59,3 +59,11 @@ func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*DBTup
 
 	return resp.Data, err
 }
+
+// Stats returns some statistics about the table
+func (s *AppendDbSDKClient) Stats(table string) (*TableStatTuple, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return s.stub.Stats(ctx, &StatsRequest{Table: table})
+}

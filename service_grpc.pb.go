@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type DBServiceClient interface {
 	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
 	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryResponse, error)
+	Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*TableStatTuple, error)
 }
 
 type dBServiceClient struct {
@@ -48,12 +49,22 @@ func (c *dBServiceClient) Query(ctx context.Context, in *QueryRequest, opts ...g
 	return out, nil
 }
 
+func (c *dBServiceClient) Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*TableStatTuple, error) {
+	out := new(TableStatTuple)
+	err := c.cc.Invoke(ctx, "/main.DBService/Stats", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DBServiceServer is the server API for DBService service.
 // All implementations must embed UnimplementedDBServiceServer
 // for forward compatibility
 type DBServiceServer interface {
 	Append(context.Context, *AppendRequest) (*AppendResponse, error)
 	Query(context.Context, *QueryRequest) (*QueryResponse, error)
+	Stats(context.Context, *StatsRequest) (*TableStatTuple, error)
 	mustEmbedUnimplementedDBServiceServer()
 }
 
@@ -66,6 +77,9 @@ func (UnimplementedDBServiceServer) Append(context.Context, *AppendRequest) (*Ap
 }
 func (UnimplementedDBServiceServer) Query(context.Context, *QueryRequest) (*QueryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
+}
+func (UnimplementedDBServiceServer) Stats(context.Context, *StatsRequest) (*TableStatTuple, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Stats not implemented")
 }
 func (UnimplementedDBServiceServer) mustEmbedUnimplementedDBServiceServer() {}
 
@@ -116,6 +130,24 @@ func _DBService_Query_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DBService_Stats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DBServiceServer).Stats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/main.DBService/Stats",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DBServiceServer).Stats(ctx, req.(*StatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DBService_ServiceDesc is the grpc.ServiceDesc for DBService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -130,6 +162,10 @@ var DBService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Query",
 			Handler:    _DBService_Query_Handler,
+		},
+		{
+			MethodName: "Stats",
+			Handler:    _DBService_Stats_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
