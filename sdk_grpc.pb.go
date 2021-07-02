@@ -33,7 +33,7 @@ func NewDBServiceClient(cc grpc.ClientConnInterface) DBServiceClient {
 
 func (c *dBServiceClient) Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error) {
 	out := new(AppendResponse)
-	err := c.cc.Invoke(ctx, "/main.DBService/Append", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dbsdk.DBService/Append", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (c *dBServiceClient) Append(ctx context.Context, in *AppendRequest, opts ..
 
 func (c *dBServiceClient) Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryResponse, error) {
 	out := new(QueryResponse)
-	err := c.cc.Invoke(ctx, "/main.DBService/Query", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dbsdk.DBService/Query", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *dBServiceClient) Query(ctx context.Context, in *QueryRequest, opts ...g
 
 func (c *dBServiceClient) Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*TableStatTuple, error) {
 	out := new(TableStatTuple)
-	err := c.cc.Invoke(ctx, "/main.DBService/Stats", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dbsdk.DBService/Stats", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func _DBService_Append_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.DBService/Append",
+		FullMethod: "/dbsdk.DBService/Append",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DBServiceServer).Append(ctx, req.(*AppendRequest))
@@ -122,7 +122,7 @@ func _DBService_Query_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.DBService/Query",
+		FullMethod: "/dbsdk.DBService/Query",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DBServiceServer).Query(ctx, req.(*QueryRequest))
@@ -140,7 +140,7 @@ func _DBService_Stats_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.DBService/Stats",
+		FullMethod: "/dbsdk.DBService/Stats",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DBServiceServer).Stats(ctx, req.(*StatsRequest))
@@ -152,7 +152,7 @@ func _DBService_Stats_Handler(srv interface{}, ctx context.Context, dec func(int
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DBService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "main.DBService",
+	ServiceName: "dbsdk.DBService",
 	HandlerType: (*DBServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -169,5 +169,5 @@ var DBService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "service.proto",
+	Metadata: "sdk.proto",
 }

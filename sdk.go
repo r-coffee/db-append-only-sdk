@@ -57,6 +57,11 @@ func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*DBTup
 
 	resp, err := s.stub.Query(ctx, &QueryRequest{Table: table, Start: start.UnixNano(), Stop: stop.UnixNano()})
 
+	// handle nil response
+	if resp == nil {
+		return nil, err
+	}
+
 	return resp.Data, err
 }
 
