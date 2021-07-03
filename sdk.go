@@ -6,12 +6,13 @@ import (
 	"log"
 	"time"
 
+	"github.com/r-coffee/db-append-only-sdk/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
 type AppendDbSDKClient struct {
-	stub DBServiceClient
+	stub proto.DBServiceClient
 }
 
 // CreateAppendDBClient creates a new sdk client
@@ -33,7 +34,7 @@ func CreateAppendDBClient(host, pathToCert string, port int) *AppendDbSDKClient 
 	if err != nil {
 		log.Fatal(err)
 	}
-	sdk.stub = NewDBServiceClient(conn)
+	sdk.stub = proto.NewDBServiceClient(conn)
 	return &sdk
 }
 
@@ -42,20 +43,20 @@ func (s *AppendDbSDKClient) Append(table string, ts time.Time, dat []byte) error
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	var tup DBTuple
+	var tup proto.DBTuple
 	tup.Ts = ts.UnixNano()
 	tup.Data = dat
 
-	_, err := s.stub.Append(ctx, &AppendRequest{Table: table, Data: &tup})
+	_, err := s.stub.Append(ctx, &proto.AppendRequest{Table: table, Data: &tup})
 	return err
 }
 
 // Query will return all the rows for a table that are between start and stop inclusive
-func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*DBTuple, error) {
+func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*proto.DBTuple, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	resp, err := s.stub.Query(ctx, &QueryRequest{Table: table, Start: start.UnixNano(), Stop: stop.UnixNano()})
+	resp, err := s.stub.Query(ctx, &proto.QueryRequest{Table: table, Start: start.UnixNano(), Stop: stop.UnixNano()})
 
 	// handle nil response
 	if resp == nil {
@@ -66,9 +67,9 @@ func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*DBTup
 }
 
 // Stats returns some statistics about the table
-func (s *AppendDbSDKClient) Stats(table string) (*TableStatTuple, error) {
+func (s *AppendDbSDKClient) Stats(table string) (*proto.TableStatTuple, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	return s.stub.Stats(ctx, &StatsRequest{Table: table})
+	return s.stub.Stats(ctx, &proto.StatsRequest{Table: table})
 }
