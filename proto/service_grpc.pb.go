@@ -18,9 +18,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DBServiceClient interface {
-	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
+	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*Empty, error)
 	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryResponse, error)
-	Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*TableStatTuple, error)
+	Stats(ctx context.Context, in *TableRequest, opts ...grpc.CallOption) (*TableStatTuple, error)
+	ListTables(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListTablesResponse, error)
+	Purge(ctx context.Context, in *TableRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type dBServiceClient struct {
@@ -31,8 +33,8 @@ func NewDBServiceClient(cc grpc.ClientConnInterface) DBServiceClient {
 	return &dBServiceClient{cc}
 }
 
-func (c *dBServiceClient) Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error) {
-	out := new(AppendResponse)
+func (c *dBServiceClient) Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/proto.DBService/Append", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -49,9 +51,27 @@ func (c *dBServiceClient) Query(ctx context.Context, in *QueryRequest, opts ...g
 	return out, nil
 }
 
-func (c *dBServiceClient) Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*TableStatTuple, error) {
+func (c *dBServiceClient) Stats(ctx context.Context, in *TableRequest, opts ...grpc.CallOption) (*TableStatTuple, error) {
 	out := new(TableStatTuple)
 	err := c.cc.Invoke(ctx, "/proto.DBService/Stats", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dBServiceClient) ListTables(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListTablesResponse, error) {
+	out := new(ListTablesResponse)
+	err := c.cc.Invoke(ctx, "/proto.DBService/ListTables", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dBServiceClient) Purge(ctx context.Context, in *TableRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/proto.DBService/Purge", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +82,11 @@ func (c *dBServiceClient) Stats(ctx context.Context, in *StatsRequest, opts ...g
 // All implementations must embed UnimplementedDBServiceServer
 // for forward compatibility
 type DBServiceServer interface {
-	Append(context.Context, *AppendRequest) (*AppendResponse, error)
+	Append(context.Context, *AppendRequest) (*Empty, error)
 	Query(context.Context, *QueryRequest) (*QueryResponse, error)
-	Stats(context.Context, *StatsRequest) (*TableStatTuple, error)
+	Stats(context.Context, *TableRequest) (*TableStatTuple, error)
+	ListTables(context.Context, *Empty) (*ListTablesResponse, error)
+	Purge(context.Context, *TableRequest) (*Empty, error)
 	mustEmbedUnimplementedDBServiceServer()
 }
 
@@ -72,14 +94,20 @@ type DBServiceServer interface {
 type UnimplementedDBServiceServer struct {
 }
 
-func (UnimplementedDBServiceServer) Append(context.Context, *AppendRequest) (*AppendResponse, error) {
+func (UnimplementedDBServiceServer) Append(context.Context, *AppendRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Append not implemented")
 }
 func (UnimplementedDBServiceServer) Query(context.Context, *QueryRequest) (*QueryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Query not implemented")
 }
-func (UnimplementedDBServiceServer) Stats(context.Context, *StatsRequest) (*TableStatTuple, error) {
+func (UnimplementedDBServiceServer) Stats(context.Context, *TableRequest) (*TableStatTuple, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stats not implemented")
+}
+func (UnimplementedDBServiceServer) ListTables(context.Context, *Empty) (*ListTablesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTables not implemented")
+}
+func (UnimplementedDBServiceServer) Purge(context.Context, *TableRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Purge not implemented")
 }
 func (UnimplementedDBServiceServer) mustEmbedUnimplementedDBServiceServer() {}
 
@@ -131,7 +159,7 @@ func _DBService_Query_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _DBService_Stats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StatsRequest)
+	in := new(TableRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -143,7 +171,43 @@ func _DBService_Stats_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/proto.DBService/Stats",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DBServiceServer).Stats(ctx, req.(*StatsRequest))
+		return srv.(DBServiceServer).Stats(ctx, req.(*TableRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DBService_ListTables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DBServiceServer).ListTables(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.DBService/ListTables",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DBServiceServer).ListTables(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DBService_Purge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TableRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DBServiceServer).Purge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.DBService/Purge",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DBServiceServer).Purge(ctx, req.(*TableRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -166,6 +230,14 @@ var DBService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Stats",
 			Handler:    _DBService_Stats_Handler,
+		},
+		{
+			MethodName: "ListTables",
+			Handler:    _DBService_ListTables_Handler,
+		},
+		{
+			MethodName: "Purge",
+			Handler:    _DBService_Purge_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

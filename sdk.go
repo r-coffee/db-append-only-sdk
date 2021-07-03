@@ -11,6 +11,11 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+const (
+	connectionTimeout = 5 * time.Second
+	requestTimeout    = 3 * time.Second
+)
+
 type AppendDbSDKClient struct {
 	stub proto.DBServiceClient
 }
@@ -27,7 +32,7 @@ func CreateAppendDBClient(host, pathToCert string, port int) *AppendDbSDKClient 
 	}
 
 	// connection timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), connectionTimeout)
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctx, fmt.Sprintf("%s:%d", host, port), grpc.WithTransportCredentials(creds), grpc.WithBlock())
@@ -40,7 +45,7 @@ func CreateAppendDBClient(host, pathToCert string, port int) *AppendDbSDKClient 
 
 // Append will write a new row to the table
 func (s *AppendDbSDKClient) Append(table string, ts time.Time, dat []byte) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	var tup proto.DBTuple
@@ -53,7 +58,7 @@ func (s *AppendDbSDKClient) Append(table string, ts time.Time, dat []byte) error
 
 // Query will return all the rows for a table that are between start and stop inclusive
 func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*proto.DBTuple, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	resp, err := s.stub.Query(ctx, &proto.QueryRequest{Table: table, Start: start.UnixNano(), Stop: stop.UnixNano()})
@@ -68,8 +73,26 @@ func (s *AppendDbSDKClient) Query(table string, start, stop time.Time) ([]*proto
 
 // Stats returns some statistics about the table
 func (s *AppendDbSDKClient) Stats(table string) (*proto.TableStatTuple, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
-	return s.stub.Stats(ctx, &proto.StatsRequest{Table: table})
+	return s.stub.Stats(ctx, &proto.TableRequest{Table: table})
+}
+
+// ListTables returns a list of all the tables in the server
+func (s *AppendDbSDKClient) ListTables() ([]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	resp, err := s.stub.ListTables(ctx, &proto.Empty{})
+	return resp.Tables, err
+}
+
+// Purge removes a table and all of it's data from the server
+func (s *AppendDbSDKClient) Purge(table string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	_, err := s.stub.Purge(ctx, &proto.TableRequest{Table: table})
+	return err
 }
